@@ -2,8 +2,8 @@ from typing import List
 import functools
 import time
 from .models import Campaign, TargetingRule
+from .extensions import db
 from flask import current_app
-import time
 
 def cache_campaigns(timeout=300):  # 5 minutes cache
     """Decorator to cache campaign results"""
@@ -42,22 +42,21 @@ def get_matching_campaigns(app_id: str, country: str, os: str) -> List[Campaign]
     Get all active campaigns that match the given targeting criteria.
     Optimized for read-heavy workloads with caching and efficient querying.
     """
-    # Query active campaigns with their rules in a single query
-    campaigns_with_rules = (
+    # Get all active campaigns with their rules
+    active_campaigns = (
         Campaign.query
         .filter_by(status="ACTIVE")
-        .join(Campaign.targeting_rules)
         .all()
     )
     
     matching_campaigns = []
     seen_campaigns = set()  # To avoid duplicates
 
-    for campaign in campaigns_with_rules:
+    for campaign in active_campaigns:
         if campaign.id in seen_campaigns:
             continue
             
-        # A campaign matches if any of its targeting rules match
+        # Check each rule for this campaign
         for rule in campaign.targeting_rules:
             if rule.matches(app_id, country, os):
                 matching_campaigns.append(campaign)

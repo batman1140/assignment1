@@ -10,11 +10,12 @@ def get_delivery():
     """
     Get matching campaigns for the given request parameters.
     Query parameters:
-    - app: The ID of the requesting app
-    - country: The country code of the user
-    - os: The operating system of the user
+    - app or app_id: The ID of the requesting app (e.g., com.example.app)
+    - country: The country code of the user (e.g., US, IN)
+    - os: The operating system of the user (e.g., android, ios, web)
     """
-    app_id = request.args.get('app')
+    # Accept either 'app' or 'app_id' parameter
+    app_id = request.args.get('app_id') or request.args.get('app')
     country = request.args.get('country', '').upper()
     os = request.args.get('os', '').lower()
 

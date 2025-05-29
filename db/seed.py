@@ -1,8 +1,14 @@
 """Seed data for the campaign targeting database."""
-from core.models import Campaign, TargetingRule, db
+from core.models import Campaign, TargetingRule
+from core.extensions import db
 
 def seed_db():
     """Seed the database with example data from requirements."""
+    
+    # Clear existing data
+    TargetingRule.query.delete()
+    Campaign.query.delete()
+    db.session.commit()
     
     # Create example campaigns
     campaigns = [
@@ -32,6 +38,7 @@ def seed_db():
     # Add campaigns to session
     for campaign in campaigns:
         db.session.add(campaign)
+    db.session.commit()
     
     # Create targeting rules
     rules = [
@@ -54,7 +61,5 @@ def seed_db():
     # Add rules to session
     for rule in rules:
         db.session.add(rule)
-    
-    # Commit all changes
     db.session.commit()
 
