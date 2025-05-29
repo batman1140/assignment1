@@ -10,7 +10,7 @@ This service provides campaign targeting capabilities through a simple HTTP API.
 - Operating System
 
 
-
+--vignesh prabhummit -m"edited readme file
 
 ## Features
 
