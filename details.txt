@@ -1,0 +1,174 @@
+Build a Targeting Engine 
+As a part of your evaluation exercise we want you to build a targeting engine that will route the 
+right campaigns to the right requests. 
+Overview 
+In this assignment, you will be creating a simple microservice which will accept HTTP requests 
+and perform a match operation against some targeting criterias. 
+There are 3 major entities in this particular assignment: 
+1. Campaign 
+2. Targeting Rule 
+3. Delivery  
+A central entity in our case is a campaign. Think about a campaign as an ad that an advertiser 
+wants to run on your inventory/supply. For example, someone from the Spotify team could 
+create a campaign which will consist of the following: 
+1. Image Creative  
+2. CTA 
+Generally a CDN or hosted image URL 
+Call To Action or CTA is a text which a user clicks on like 
+‘Download Now’, ‘Install’ etc 
+3. State 
+Campaign state denotes whether a campaign is currently 
+“ACTIVE” or “INACTIVE” 
+A targeting rule defines where a campaign can actually run. Typically targeting rules will 
+encompass the following dimensions: 
+1. App ID 
+2. Country 
+A unique identifier to identify an app or a game. Like 
+“com.dream11.fantasy.cricket.football.kabaddi” is to identify 
+Dream11 app 
+This is the country of a particular user which is using the host app 
+© GreedyGame Media Pvt Ltd. All the contents of this document are confidential and should never be shared publicly 
+3. Operating System Like Android, iOS, Web etc 
+A targeting rule forms a relationship between a campaign and on what dimensions should be 
+served. For instance, if a campaign is targeted towards India for the Candy Crush game, then a 
+request originating from the US for the same game should not serve that particular campaign. 
+Do note that it is not necessary that all targeting rules are applied for all dimensions. In such a 
+case, that particular dimension should not be evaluated for the request. For instance, if a rule is 
+not applied for Country, requests from all countries will be valid for that campaign.  
+A targeting rule also allows for inclusion and exclusion of dimensions. For example, it is possible 
+to define a rule stating that a campaign should run for all “Web” properties/apps in all Geos 
+apart from Canada. In this case the targeting rule could look like:  
+Include OS as “web” 
+Exclude Country as “Canada” 
+Any campaign that matches the above rule set should be served by the delivery service. Also, 
+just to simplify things, please consider that an inclusion and exclusion rule cannot be applied on 
+the same dimension at the same time. For example, a rule like: 
+Include Country as India 
+Exclude Country as US 
+Would not make sense because if the request is coming from India, it is automatically excluded 
+from the US. This is an example of an invalid targeting rule. 
+A delivery service is the one where an app/game is going to make a request. For the sake of 
+simplicity, you can presume that all the dimensions that are required for targeting are going to 
+be present in the request to the delivery service. In this case, every request should contain the 
+App ID, OS and Country information. 
+Based on the rules in the targeting service, the delivery service should send a list of campaigns 
+to a particular user where the targeting rules are valid. You should consider the following points: 
+1. A request to a delivery service will be made by an end user 
+2. A request may generate an empty response (HTTP 204) if there are no campaigns that 
+match the parameters in the incoming request 
+3. If there is any valid campaign that matches the targeting criteria, the delivery service 
+should send the details of that campaign with a HTTP 200 status code. If there are 
+multiple campaigns that match the targeting criteria, all the campaigns should be sent 
+out which match 
+© GreedyGame Media Pvt Ltd. All the contents of this document are confidential and should never be shared publicly 
+ 
+4. If a request to the delivery service is missing some required parameter, the service 
+should respond back with a HTTP 400 status code along with the appropriate error 
+message 
+5. Only “active” campaign status should be delivered via the delivery service. If the status 
+of a campaign changes to inactive, then the delivery service should stop sending that as 
+a response 
+ 
+In order to understand all of this a bit better, consider the following campaigns 
+ 
+ 
+Campaign ID Name Image CTA Status 
+spotify Spotify - Music for everyone https://somelink Download ACTIVE 
+duolingo Duolingo: Best way to learn https://somelink2 Install ACTIVE 
+subwaysurfer Subway Surfer https://somelink3 Play ACTIVE 
+ 
+ 
+ 
+And the following targeting rules are applied: 
+ 
+ 
+Campaign ID Rules 
+spotify IncludeCountry: (“US”, “Canada”) 
+duolingo IncludeOS: (“Android”, “iOS”), ExcludeCountry(“US”) 
+subwaysurfer IncludeOS:(“Android”), IncludeApp(“com.gametion.ludokinggame”) 
+ 
+ 
+Your delivery service would have the same set of responses to the following requests: 
+ 
+ 
+Request /v1/delivery?app=com.abc.xyz&country=germany&os=android 
+Response HTTP 200 
+ 
+[ 
+  { 
+    "cid": "duolingo", 
+© GreedyGame Media Pvt Ltd. All the contents of this document are confidential and should never be shared publicly 
+ 
+    "img": "https://somelink2", 
+    "cta": "Install" 
+  } 
+] 
+ 
+ 
+Request /v1/delivery?app=com.gametion.ludokinggame&country=us&os=android 
+Response HTTP 200 
+ 
+[ 
+  { 
+    "cid": "spotify", 
+    "img": "https://somelink", 
+    "cta": "Download" 
+  }, 
+  { 
+    "cid": "subwaysurfer", 
+    "img": "https://somelink3", 
+    "cta": "Play" 
+  } 
+] 
+ 
+ 
+ 
+Request /v1/delivery?country=germany&os=android 
+Response HTTP 400 
+ 
+{ 
+    "error": "missing app param", 
+} 
+ 
+Task 
+ 
+You are required to build the delivery service endpoint which will serve a list of campaigns. 
+1. This will be a GET endpoint available on a web server 
+2. You will have to keep an eye for performance issues 
+© GreedyGame Media Pvt Ltd. All the contents of this document are confidential and should never be shared publicly 
+3. Think about scalability (horizontal as well as vertical) 
+4. Write test cases to check for correctness  
+5. Your architecture should comply with the read-heavy nature of this problem. The number 
+of campaigns will always be much smaller than the number of delivery requests. 1000s 
+of campaigns vs Billions of delivery request 
+6. Think about how your code complexity will increase if the number of dimensions will 
+increase 
+7. You are free to choose any database or cache of your choice. There is no constraint on 
+SQL/NoSQL DBs 
+8. You are not required to create end-points for storing Targeting rules and Campaign 
+details. Those can be directly inserted into the database. But your delivery service 
+should react to the changes in the DB. For example, if the status of a campaign is 
+changed to “inactive”, the delivery service should stop serving it. Similarly, if the link of a 
+campaign is changed, the delivery service should send the updated link 
+9. If you want to use an AI based generator to generate your code, please ensure that you 
+have understood the functionality properly. You will be asked to make changes to your 
+codebase in the next live coding round. You will be unable to use a generator there 
+�
+�
+ 
+Submission 
+Once you are happy with your solution, please check in your repo to any open CVS like GitHub 
+but as a private repo and share the link in the same email where you got the assignment. You 
+can also share the repo privately with: arpit.ch@greedygame.com so that we can do a code 
+review. Please make sure that you do not commit this document as a part of your commit. 
+If you need any help with the problem or otherwise, please respond back to the same thread 
+where you got the problem from. 
+Bonus 
+1. If you can put in instrumentation using Prometheus and Grafana for your service, that 
+will be an added benefit 
+2. We always love to see a good and clean code commit history, instead of everything 
+pushed into a single commit 
+3. Try and use go-kit for this problem and see if you are able to structure things according 
+to this framework 
+All the best! 
+© GreedyGame Media Pvt Ltd. All the contents of this document are confidential and should never be shared publicly 
