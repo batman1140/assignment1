@@ -9,6 +9,9 @@ This service provides campaign targeting capabilities through a simple HTTP API.
 - Country
 - Operating System
 
+
+
+
 ## Features
 
 - Campaign management with active/inactive states
